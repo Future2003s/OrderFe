@@ -1,7 +1,8 @@
 {
-  "name": "orderfe",
+  "name": "lala-lycheee",
   "version": "0.1.0",
   "private": true,
+  "description": "Website bán nước ép vải nguyên chất 100% - LALA-LYCHEEE",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

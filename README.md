@@ -1,6 +1,8 @@
-# LALA-LYCHEEE E-commerce
+# LALA-LYCHEEE - Nước Ép Vải Hảo Hạng Thanh Hà
 
-Trang bán hàng e-commerce với Next.js 16, TypeScript, TailwindCSS và shadcn/ui, tích hợp với Backend API.
+Website bán nước ép vải nguyên chất 100% với Next.js 16, TypeScript, TailwindCSS và shadcn/ui, tích hợp với Backend API.
+
+**Sản phẩm:** Nước ép vải thiều, nước ép vải nhỡ (u hồng), nước ép vải tàu lai, nước ép vải phối trộn.
 
 ## Cài đặt
 
@@ -84,16 +86,33 @@ Frontend đã được tích hợp với Backend API:
   - `orders.ts` - Order API functions
   - `cart.ts` - Cart API functions (optional)
 
+## Sản phẩm
+
+Dự án này chỉ bán **nước ép vải** với 4 loại:
+
+1. **Nước Ép Vải Thiều** - 75.000đ
+2. **Nước Ép Vải Nhỡ (U Hồng)** - 95.000đ
+3. **Nước Ép Vải Tàu Lai** - 80.000đ
+4. **Nước Ép Vải Phối Trộn** - 80.000đ
+
+Tất cả sản phẩm đều:
+- Nguyên chất 100% từ vải tươi
+- Không chất bảo quản
+- Không đường hóa học
+- Ép lạnh giữ nguyên hương vị tự nhiên
+
 ## Tính năng
 
+- ✅ Website chuyên bán nước ép vải
 - ✅ Tích hợp Backend API
 - ✅ Fallback về mock data nếu API lỗi
 - ✅ Loading states và error handling
-- ✅ Responsive design
+- ✅ Responsive design (mobile-first)
 - ✅ SEO optimized
 - ✅ Performance optimized
 - ✅ Đặt trước sản phẩm với thanh toán COD
 - ✅ Theo dõi đơn hàng
+- ✅ Hiển thị 4 loại nước ép vải
 
 ## Mapping dữ liệu
 

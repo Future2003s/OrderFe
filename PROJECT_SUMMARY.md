@@ -1,4 +1,10 @@
-# Tóm tắt dự án LALA-LYCHEEE E-commerce
+# Tóm tắt dự án LALA-LYCHEEE - Nước Ép Vải Hảo Hạng Thanh Hà
+
+**Mục đích:** Website chuyên bán nước ép vải nguyên chất 100% với 4 loại sản phẩm:
+- Nước Ép Vải Thiều (75.000đ)
+- Nước Ép Vải Nhỡ/U Hồng (95.000đ)
+- Nước Ép Vải Tàu Lai (80.000đ)
+- Nước Ép Vải Phối Trộn (80.000đ)
 
 ## Cấu trúc dự án
 
@@ -112,11 +118,22 @@ OrderFe/
 - **Carousel**: embla-carousel-react
 - **Animations**: framer-motion (sẵn sàng sử dụng)
 
+## Sản phẩm
+
+- **4 loại nước ép vải:**
+  1. Nước Ép Vải Thiều - 75.000đ
+  2. Nước Ép Vải Nhỡ (U Hồng) - 95.000đ
+  3. Nước Ép Vải Tàu Lai - 80.000đ
+  4. Nước Ép Vải Phối Trộn - 80.000đ
+
+- Tất cả đều nguyên chất 100%, không chất bảo quản, không đường hóa học
+- Ép lạnh giữ nguyên hương vị tự nhiên
+
 ## Mock Data
 
-- 4 sản phẩm mẫu (Nước cốt vải, Mật ong hoa vải, etc.)
+- 4 sản phẩm nước ép vải (mock data)
 - Reviews mẫu
-- API mock với localStorage
+- API mock với localStorage (đã tích hợp Backend API)
 
 ## Responsive Design
 
@@ -145,8 +162,9 @@ npm run dev
 
 ## Lưu ý
 
-- Tất cả API đang dùng mock (localStorage)
-- Cần thay thế bằng API thật khi tích hợp backend
-- Images đang dùng Unsplash placeholder, cần thay bằng ảnh thật
-- Mã giảm giá hiện chỉ hỗ trợ "WELCOME10" (mock)
+- ✅ Đã tích hợp Backend API (có fallback về mock data)
+- ✅ Chỉ bán nước ép vải, không phải e-commerce tổng quát
+- ✅ Phương thức thanh toán: Đặt trước sản phẩm, thanh toán COD khi nhận hàng
+- Images đang dùng Unsplash placeholder, cần thay bằng ảnh thật của sản phẩm
+- Tất cả sản phẩm đều có rating 5 sao
 

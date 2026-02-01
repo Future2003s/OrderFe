@@ -1,4 +1,6 @@
-# Hướng dẫn cài đặt
+# Hướng dẫn cài đặt - LALA-LYCHEEE Nước Ép Vải
+
+Website bán nước ép vải nguyên chất 100% với 4 loại sản phẩm.
 
 ## Bước 1: Cài đặt dependencies cơ bản
 
@@ -37,9 +39,20 @@ npm run dev
 
 Mở trình duyệt tại [http://localhost:3000](http://localhost:3000)
 
+## Cấu hình API (Tùy chọn)
+
+Nếu muốn tích hợp với Backend API, tạo file `.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
+```
+
+Nếu không có Backend, website sẽ tự động sử dụng mock data.
+
 ## Lưu ý
 
 - Tất cả dependencies đã được liệt kê trong `package.json`
 - Nếu gặp lỗi về missing dependencies, chạy lại `npm install`
 - Đảm bảo Node.js version >= 18.x
+- **Dự án này chỉ bán nước ép vải**, không phải e-commerce tổng quát
 
