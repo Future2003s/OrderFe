@@ -284,7 +284,8 @@ export async function uploadProductImage(
     const formData = new FormData()
     formData.append("image", file)
 
-    const response = await fetch(apiConfig.endpoints.productsAdmin.uploadImage, {
+    // Proxy through OrderFe to avoid CORS issues in the browser
+    const response = await fetch("/api/upload-image", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -292,12 +293,25 @@ export async function uploadProductImage(
       body: formData,
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || "Failed to upload image")
+    const contentType = response.headers.get("content-type") || ""
+    const raw = await response.text().catch(() => "")
+
+    // Some servers return JSON with incorrect Content-Type; attempt to parse anyway.
+    let data: any = null
+    try {
+      data = raw ? JSON.parse(raw) : null
+    } catch {
+      data = null
     }
 
-    const data = await response.json()
+    if (!response.ok) {
+      throw new Error(
+        data?.message ||
+          data?.error ||
+          (raw ? raw.slice(0, 300) : "") ||
+          `Failed to upload image (HTTP ${response.status})`
+      )
+    }
     
     if (data.success && data.data) {
       return {

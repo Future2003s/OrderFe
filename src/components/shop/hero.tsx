@@ -58,6 +58,7 @@ export function Hero() {
       }
     }
   }, [])
+  
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex items-center">
       {/* Premium gradient background */}
