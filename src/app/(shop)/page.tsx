@@ -4,24 +4,46 @@ import { ProductGrid } from "@/components/shop/product-grid"
 import { Reviews } from "@/components/shop/reviews"
 import { FAQAccordion } from "@/components/shop/faq-accordion"
 import { MultiBuyPromo } from "@/components/shop/multi-buy-promo"
-import { getFeaturedProducts, getProducts } from "@/api/products"
+import { FeaturedProductHero } from "@/components/shop/featured-product-hero"
+import { getFeaturedProducts, getProducts, getNuocCotVai100Product } from "@/api/products"
 import { products as mockProducts } from "@/data/products"
 
 export default async function HomePage() {
+  // Fetch "Nước Cốt Vải 100% Thanh Hà" product specifically
+  let nuocCotVaiProduct = null
+  try {
+    nuocCotVaiProduct = await getNuocCotVai100Product()
+  } catch (error) {
+    console.error("Error fetching Nuoc Cot Vai 100 product:", error)
+  }
+
   // Try to fetch featured products from API, fallback to mock
   let featuredProducts
   try {
     const apiProducts = await getFeaturedProducts()
-    featuredProducts = apiProducts.length > 0 ? apiProducts.slice(0, 4) : mockProducts.slice(0, 4)
+    
+    // If we have the Nuoc Cot Vai product, add it to the beginning of the list
+    if (nuocCotVaiProduct) {
+      // Remove it from the list if it's already there to avoid duplicates
+      const filteredProducts = apiProducts.filter(p => p.id !== nuocCotVaiProduct!.id)
+      featuredProducts = [nuocCotVaiProduct, ...filteredProducts].slice(0, 4)
+    } else {
+      featuredProducts = apiProducts.length > 0 ? apiProducts.slice(0, 4) : mockProducts.slice(0, 4)
+    }
   } catch (error) {
     // Fallback to mock data if API fails
-    featuredProducts = mockProducts.slice(0, 4)
+    if (nuocCotVaiProduct) {
+      featuredProducts = [nuocCotVaiProduct, ...mockProducts.slice(0, 3)]
+    } else {
+      featuredProducts = mockProducts.slice(0, 4)
+    }
   }
 
   return (
     <>
       <Hero />
       <TrustBadges />
+      <FeaturedProductHero product={nuocCotVaiProduct} />
       <section className="container py-24">
         <div className="mb-16 text-center space-y-4">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -44,8 +66,8 @@ export default async function HomePage() {
               Những gì khách hàng nói về chúng tôi
             </p>
           </div>
-          <div className="max-w-4xl mx-auto">
-            <Reviews productId="1" />
+          <div className="max-w-6xl mx-auto">
+            <Reviews showAll={true} limit={6} />
           </div>
         </div>
       </section>

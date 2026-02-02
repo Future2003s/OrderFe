@@ -35,7 +35,7 @@ export async function generateMetadata({
   
   // Fallback to mock data
   if (!product) {
-    product = getProductBySlug(slug)
+    product = getProductBySlug(slug) || null
   }
 
   if (!product) {
@@ -72,7 +72,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   
   // Fallback to mock data
   if (!product) {
-    product = getProductBySlug(slug)
+    product = getProductBySlug(slug) || null
   }
 
   if (!product) {

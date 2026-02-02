@@ -5,8 +5,59 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
 
 export function Hero() {
+  const [heroImageUrl, setHeroImageUrl] = useState(
+    "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=800&fit=crop"
+  )
+
+  useEffect(() => {
+    // Load hero image from localStorage
+    if (typeof window !== "undefined") {
+      const savedImages = localStorage.getItem("homepageImages")
+      if (savedImages) {
+        try {
+          const images = JSON.parse(savedImages)
+          const heroImage = images.find((img: any) => img.id === "hero-image")
+          if (heroImage?.url) {
+            setHeroImageUrl(heroImage.url)
+          }
+        } catch (error) {
+          console.error("Error loading hero image:", error)
+        }
+      }
+    }
+  }, [])
+
+  // Listen for storage changes (when admin updates image)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleStorageChange = () => {
+        const savedImages = localStorage.getItem("homepageImages")
+        if (savedImages) {
+          try {
+            const images = JSON.parse(savedImages)
+            const heroImage = images.find((img: any) => img.id === "hero-image")
+            if (heroImage?.url) {
+              setHeroImageUrl(heroImage.url)
+            }
+          } catch (error) {
+            console.error("Error loading hero image:", error)
+          }
+        }
+      }
+
+      window.addEventListener("storage", handleStorageChange)
+      // Also listen for custom event (when same tab updates)
+      window.addEventListener("homepageImagesUpdated", handleStorageChange)
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange)
+        window.removeEventListener("homepageImagesUpdated", handleStorageChange)
+      }
+    }
+  }, [])
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex items-center">
       {/* Premium gradient background */}
@@ -59,7 +110,7 @@ export function Hero() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl blur-3xl" />
             <div className="relative aspect-square rounded-3xl overflow-hidden premium-shadow-lg border border-primary/10">
               <Image
-                src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=800&fit=crop"
+                src={heroImageUrl}
                 alt="Nước ép vải hảo hạng Thanh Hà LALA-LYCHEEE 100% tự nhiên"
                 fill
                 className="object-cover"

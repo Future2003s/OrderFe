@@ -45,12 +45,24 @@ class ApiClient {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || "API request failed")
+        // Include full error details for better debugging
+        const errorMessage = data.message || data.error || "API request failed"
+        const errorDetails = data.errors || data.stack
+        const error = new Error(errorMessage) as any
+        error.response = { data, status: response.status }
+        error.errors = errorDetails
+        throw error
       }
 
       return data
-    } catch (error) {
+    } catch (error: any) {
       console.error("API Error:", error)
+      // Re-throw with more context if it's not already an Error with response
+      if (!error.response) {
+        const apiError = new Error(error.message || "API request failed") as any
+        apiError.originalError = error
+        throw apiError
+      }
       throw error
     }
   }

@@ -24,12 +24,23 @@ Tạo file `.env.local` trong thư mục gốc:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8081/api/v1
+NEXT_PUBLIC_PRODUCTS_API_URL=http://localhost:8081/products
 ```
 
 **Lưu ý:** 
 - Đảm bảo Backend API đang chạy tại `http://localhost:8081`
 - Nếu Backend chạy ở port khác, cập nhật `NEXT_PUBLIC_API_URL` tương ứng
 - Frontend sẽ tự động fallback về mock data nếu API không khả dụng
+
+## Cấu hình Port
+
+OrderFe mặc định chạy trên **port 3001**:
+- Development: `npm run dev` → `http://localhost:3001`
+- Production: `npm start` → `http://localhost:3001`
+
+Để thay đổi port, có thể:
+1. Sửa trong `package.json` scripts (thêm `-p <port>`)
+2. Hoặc set biến môi trường `PORT=<port>` trong `.env.production`
 
 ## Chạy dự án
 
@@ -48,7 +59,7 @@ Backend sẽ chạy tại `http://localhost:8081`
 npm run dev
 ```
 
-Frontend sẽ chạy tại `http://localhost:3000`
+Frontend sẽ chạy tại `http://localhost:3001`
 
 ## Tích hợp API
 

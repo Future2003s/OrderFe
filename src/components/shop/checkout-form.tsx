@@ -66,13 +66,21 @@ export function CheckoutForm() {
         items: items.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
+          price: item.product.price, // Include price for validation
+          name: item.product.name, // Include name for validation
         })),
       })
       clearCart()
       router.push(`/order/success?code=${result.code}`)
-    } catch (error) {
-      toast.error("Đặt hàng thất bại. Vui lòng thử lại.")
-      console.error(error)
+    } catch (error: any) {
+      const errorMessage = error?.message || error?.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
+      toast.error(errorMessage)
+      console.error("Checkout error:", error)
+      
+      // Log detailed error for debugging
+      if (error?.response) {
+        console.error("API Error Response:", error.response)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -84,7 +92,7 @@ export function CheckoutForm() {
         <Info className="h-4 w-4 text-primary" />
         <AlertDescription className="text-sm">
           <strong>Đặt trước sản phẩm:</strong> Bạn sẽ đặt hàng trước và thanh toán khi nhận hàng (COD). 
-          Chúng tôi sẽ liên hệ xác nhận đơn hàng trong vòng 24h.
+          Chúng tôi sẽ liên hệ xác nhận đơn hàng trong vòng 24h. Nếu có bất kỳ câu hỏi nào, vui lòng liên hệ SĐT: 0962.215.666 hoặc Email: info@lalalycheee.vn
         </AlertDescription>
       </Alert>
       

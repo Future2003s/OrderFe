@@ -7,13 +7,27 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { getProducts, searchProducts, type Product } from "@/api/products"
+import { getProducts, searchProducts, getNuocCotVai100Product, type Product } from "@/api/products"
 import { products as mockProducts } from "@/data/products"
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [allTags, setAllTags] = useState<string[]>([])
+
+  // Fetch "Nước Cốt Vải 100% Thanh Hà" product specifically
+  const { data: nuocCotVaiProduct } = useQuery<Product | null>({
+    queryKey: ["nuoc-cot-vai-100"],
+    queryFn: async () => {
+      try {
+        return await getNuocCotVai100Product()
+      } catch (error) {
+        console.error("Error fetching Nuoc Cot Vai 100 product:", error)
+        return null
+      }
+    },
+    staleTime: 300000, // 5 minutes - cache longer since it's a specific product
+  })
 
   // Fetch products from API
   const { data: apiProducts, isLoading } = useQuery<Product[]>({
@@ -32,8 +46,27 @@ export default function ProductsPage() {
     staleTime: 60000, // 1 minute
   })
 
-  // Use API products or fallback to mock
-  const products = apiProducts || mockProducts
+  // Combine products: prioritize Nuoc Cot Vai 100 product, then API products, then mock
+  const products = useMemo(() => {
+    let combined: Product[] = []
+    
+    // Start with API products or mock
+    const baseProducts = apiProducts || mockProducts
+    
+    // If we have the Nuoc Cot Vai product, add it first and remove duplicates
+    if (nuocCotVaiProduct) {
+      combined = [nuocCotVaiProduct]
+      // Add other products, excluding the Nuoc Cot Vai product if it's already in the list
+      combined = [
+        ...combined,
+        ...baseProducts.filter(p => p.id !== nuocCotVaiProduct.id)
+      ]
+    } else {
+      combined = baseProducts
+    }
+    
+    return combined
+  }, [apiProducts, nuocCotVaiProduct, mockProducts])
 
   // Extract tags from products
   useEffect(() => {

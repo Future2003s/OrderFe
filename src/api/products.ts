@@ -185,3 +185,23 @@ export async function searchProducts(query: string): Promise<Product[]> {
   }
 }
 
+/**
+ * Get "Nước Cốt Vải 100% Thanh Hà" product specifically
+ * Dedicated endpoint for this specific product
+ */
+export async function getNuocCotVai100Product(): Promise<Product | null> {
+  try {
+    const response = await apiClient.get<BackendProduct>(
+      "/products/nuoc-cot-vai-100"
+    )
+    
+    if (response.data) {
+      return mapBackendProductToFrontend(response.data)
+    }
+    
+    return null
+  } catch (error) {
+    console.error("Error fetching Nuoc Cot Vai 100 product:", error)
+    return null
+  }
+}

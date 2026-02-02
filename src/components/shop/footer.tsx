@@ -81,8 +81,16 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-6 text-base">Liên hệ</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li className="hover:text-foreground transition-colors">Email: info@lala-lycheee.com</li>
-              <li className="hover:text-foreground transition-colors">Hotline: 1900 1234</li>
+              <li className="hover:text-foreground transition-colors">
+                <a href="mailto:info@lalalycheee.vn" className="hover:text-primary">
+                  Email: info@lalalycheee.vn
+                </a>
+              </li>
+              <li className="hover:text-foreground transition-colors">
+                <a href="tel:0962215666" className="hover:text-primary">
+                  SĐT: 0962.215.666
+                </a>
+              </li>
               <li className="hover:text-foreground transition-colors">Giờ làm việc: 8:00 - 20:00</li>
             </ul>
           </div>

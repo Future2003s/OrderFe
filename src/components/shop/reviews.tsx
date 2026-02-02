@@ -1,12 +1,18 @@
 import { Star } from "lucide-react"
-import { getReviewsByProductId } from "@/data/products"
+import { getReviewsByProductId, reviews as allReviews } from "@/data/products"
 
 interface ReviewsProps {
-  productId: string
+  productId?: string
+  showAll?: boolean
+  limit?: number
 }
 
-export function Reviews({ productId }: ReviewsProps) {
-  const reviews = getReviewsByProductId(productId)
+export function Reviews({ productId, showAll = false, limit }: ReviewsProps) {
+  let reviews = productId 
+    ? getReviewsByProductId(productId)
+    : showAll 
+    ? allReviews 
+    : allReviews.slice(0, limit || 6)
 
   if (reviews.length === 0) {
     return (
@@ -16,14 +22,42 @@ export function Reviews({ productId }: ReviewsProps) {
     )
   }
 
+  // Format date to Vietnamese format (dd/mm/yyyy)
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const day = date.getDate()
+    const month = date.getMonth() + 1
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
+  // Generate avatar initials
+  const getInitials = (name: string) => {
+    const parts = name.split(" ")
+    if (parts.length >= 2) {
+      return (parts[parts.length - 2][0] + parts[parts.length - 1][0]).toUpperCase()
+    }
+    return name.substring(0, 2).toUpperCase()
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {reviews.map((review) => (
-        <div key={review.id} className="border-b pb-6 last:border-0">
-          <div className="flex items-start justify-between mb-2">
-            <div>
-              <p className="font-semibold">{review.userName}</p>
-              <div className="flex items-center gap-2 mt-1">
+        <div 
+          key={review.id} 
+          className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-start gap-4 mb-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+                {getInitials(review.userName)}
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                {review.userName}
+              </p>
+              <div className="flex items-center gap-2 mb-2">
                 <div className="flex">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
@@ -31,18 +65,20 @@ export function Reviews({ productId }: ReviewsProps) {
                       className={`h-4 w-4 ${
                         i < review.rating
                           ? "fill-yellow-400 text-yellow-400"
-                          : "text-muted"
+                          : "text-gray-300 dark:text-gray-600"
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {new Date(review.date).toLocaleDateString("vi-VN")}
-                </span>
               </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDate(review.date)}
+              </span>
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">{review.comment}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            {review.comment}
+          </p>
         </div>
       ))}
     </div>
