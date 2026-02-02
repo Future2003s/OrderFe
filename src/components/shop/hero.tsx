@@ -9,7 +9,7 @@ import { useState, useEffect } from "react"
 
 export function Hero() {
   const [heroImageUrl, setHeroImageUrl] = useState(
-    "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=800&h=800&fit=crop"
+    "https://res.cloudinary.com/deu1fhggt/image/upload/v1769998097/products/products/1769998096062-v6h1csou8a.jpg"
   )
 
   useEffect(() => {
