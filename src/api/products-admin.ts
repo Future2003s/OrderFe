@@ -4,9 +4,7 @@
  */
 
 import { apiClient } from "@/lib/api-client"
-
-// Use direct API endpoint (not /api/v1)
-const PRODUCTS_API_BASE = process.env.NEXT_PUBLIC_PRODUCTS_API_URL || "http://localhost:8081/products"
+import { apiConfig } from "@/config/api"
 
 export interface AdminProduct {
   _id: string
@@ -104,7 +102,7 @@ export async function getAdminProducts(params?: {
     )
     
     const response = await fetch(
-      `${PRODUCTS_API_BASE}?${new URLSearchParams(queryParams as any).toString()}`,
+      `${apiConfig.endpoints.productsAdmin.list}?${new URLSearchParams(queryParams as any).toString()}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +150,7 @@ export async function getAdminProductById(id: string, token?: string): Promise<A
       headers["Authorization"] = `Bearer ${token}`
     }
 
-    const response = await fetch(`${PRODUCTS_API_BASE}/${id}`, {
+    const response = await fetch(apiConfig.endpoints.productsAdmin.getById(id), {
       headers,
     })
 
@@ -181,7 +179,7 @@ export async function createAdminProduct(
   token: string
 ): Promise<AdminProduct | null> {
   try {
-    const response = await fetch(PRODUCTS_API_BASE, {
+    const response = await fetch(apiConfig.endpoints.productsAdmin.create, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -217,7 +215,7 @@ export async function updateAdminProduct(
   token: string
 ): Promise<AdminProduct | null> {
   try {
-    const response = await fetch(`${PRODUCTS_API_BASE}/${productId}`, {
+    const response = await fetch(apiConfig.endpoints.productsAdmin.update(productId), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -252,7 +250,7 @@ export async function deleteAdminProduct(
   token: string
 ): Promise<boolean> {
   try {
-    const response = await fetch(`${PRODUCTS_API_BASE}/${productId}`, {
+    const response = await fetch(apiConfig.endpoints.productsAdmin.delete(productId), {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${token}`,
@@ -286,8 +284,7 @@ export async function uploadProductImage(
     const formData = new FormData()
     formData.append("image", file)
 
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1"
-    const response = await fetch(`${API_BASE}/products/images`, {
+    const response = await fetch(apiConfig.endpoints.productsAdmin.uploadImage, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${token}`,

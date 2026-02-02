@@ -2,7 +2,7 @@
  * Authentication API
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api/v1"
+import { apiConfig } from "@/config/api"
 
 export interface LoginCredentials {
   email: string
@@ -29,7 +29,7 @@ export interface LoginResponse {
  */
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(apiConfig.endpoints.auth.login, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -55,7 +55,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
  */
 export async function getCurrentUser(token: string): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(apiConfig.endpoints.auth.me, {
       headers: {
         "Authorization": `Bearer ${token}`,
       },
