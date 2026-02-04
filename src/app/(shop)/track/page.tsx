@@ -55,31 +55,41 @@ export default function TrackPage() {
   return (
     <div className="container py-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-4">Theo dõi đơn hàng</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center md:text-left">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Theo dõi đơn hàng</h1>
+          <p className="text-muted-foreground text-lg">
             Nhập mã đơn hàng để xem trạng thái đơn hàng của bạn
           </p>
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>Tìm kiếm đơn hàng</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Tìm kiếm đơn hàng
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
-                placeholder="Nhập mã đơn hàng (ví dụ: ORD12345678)"
+                placeholder="Nhập mã đơn hàng (ví dụ: ORD000023)"
                 value={orderCode}
                 onChange={(e) => setOrderCode(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="flex-1"
                 aria-label="Mã đơn hàng"
               />
-              <Button onClick={handleSearch} disabled={!orderCode.trim()}>
+              <Button 
+                onClick={handleSearch} 
+                disabled={!orderCode.trim()}
+                className="w-full sm:w-auto"
+              >
                 <Search className="mr-2 h-4 w-4" />
                 Tìm kiếm
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              💡 Bạn có thể tìm đơn hàng bằng mã đơn hàng bạn đã nhận được
+            </p>
           </CardContent>
         </Card>
         {isLoading && (

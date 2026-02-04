@@ -73,7 +73,8 @@ export const apiConfig = {
     // Order endpoints
     orders: {
       create: `${API_BASE_URL}/orders/guest`,
-      getByCode: (code: string) => `${API_BASE_URL}/orders/${code}`,
+      getByCode: (code: string) => `${API_BASE_URL}/orders/number/${code}`,
+      getById: (id: string) => `${API_BASE_URL}/orders/${id}`,
       track: (code: string) => `${API_BASE_URL}/orders/${code}/tracking`,
     },
     

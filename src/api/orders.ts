@@ -179,22 +179,50 @@ export async function createOrder(data: {
 
 export async function getOrderByCode(code: string): Promise<Order | null> {
   try {
-    // Backend uses orderNumber, try to search by it
-    // First try direct lookup by orderNumber
-    const response = await apiClient.get<BackendOrder>(`/orders/${code}`)
-    if (response.data) {
-      return mapBackendOrderToFrontend(response.data)
+    if (!code || !code.trim()) {
+      return null
+    }
+
+    // Backend uses orderNumber, try to search by it using public endpoint
+    // First try the public endpoint for orderNumber lookup
+    const orderNumber = code.toUpperCase().trim()
+    
+    try {
+      const response = await apiClient.get<BackendOrder>(`/orders/number/${encodeURIComponent(orderNumber)}`)
+      if (response.success && response.data) {
+        return mapBackendOrderToFrontend(response.data)
+      }
+    } catch (numberError: any) {
+      // If orderNumber endpoint fails (404), try by ID (might be ObjectId)
+      // Check if code looks like ObjectId (24 hex characters)
+      const objectIdPattern = /^[0-9a-fA-F]{24}$/
+      if (objectIdPattern.test(code.trim())) {
+        try {
+          const response = await apiClient.get<BackendOrder>(`/orders/${code.trim()}`)
+          if (response.success && response.data) {
+            return mapBackendOrderToFrontend(response.data)
+          }
+        } catch (idError: any) {
+          // If both fail, return null
+          console.error("Error fetching order by ID:", idError)
+        }
+      } else {
+        // Not an ObjectId and orderNumber lookup failed
+        console.error("Error fetching order by number:", numberError)
+      }
     }
     
-    // If not found, try to search in orders (might need to implement search endpoint)
-    // For now, return null and let the UI handle it
     return null
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching order:", error)
     // Fallback: check localStorage for mock orders
     if (typeof window !== "undefined") {
-      const orders = JSON.parse(localStorage.getItem("mock-orders") || "[]") as Order[]
-      return orders.find((o) => o.code === code) || null
+      try {
+        const orders = JSON.parse(localStorage.getItem("mock-orders") || "[]") as Order[]
+        return orders.find((o) => o.code === code.toUpperCase()) || null
+      } catch (e) {
+        // Ignore localStorage errors
+      }
     }
     return null
   }
@@ -202,14 +230,26 @@ export async function getOrderByCode(code: string): Promise<Order | null> {
 
 export async function getOrderTracking(code: string): Promise<Order | null> {
   try {
-    // Try to get order by orderNumber
-    const response = await apiClient.get<BackendOrder>(`/orders/${code}/tracking`)
-    if (response.data) {
-      return mapBackendOrderToFrontend(response.data)
+    // First try to get order by code (which uses the public endpoint)
+    const order = await getOrderByCode(code)
+    if (order) {
+      return order
     }
+    
+    // If not found by code, try tracking endpoint (requires auth, might fail)
+    try {
+      const response = await apiClient.get<BackendOrder>(`/orders/${code}/tracking`)
+      if (response.success && response.data) {
+        return mapBackendOrderToFrontend(response.data)
+      }
+    } catch (trackingError) {
+      // Tracking endpoint might require auth, fallback to null
+      console.error("Error fetching order tracking:", trackingError)
+    }
+    
     return null
   } catch (error) {
-    // Fallback: try to get order directly
-    return getOrderByCode(code)
+    console.error("Error in getOrderTracking:", error)
+    return null
   }
 }
