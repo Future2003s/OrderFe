@@ -224,21 +224,43 @@ export async function updateAdminProduct(
       body: JSON.stringify(productData),
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.message || "Failed to update product")
+    const contentType = response.headers.get("content-type")
+    let errorData: any = null
+    
+    if (contentType && contentType.includes("application/json")) {
+      try {
+        errorData = await response.json()
+      } catch (e) {
+        // If JSON parsing fails, use text
+        const text = await response.text()
+        throw new Error(text || `Failed to update product (HTTP ${response.status})`)
+      }
+    } else {
+      const text = await response.text()
+      throw new Error(text || `Failed to update product (HTTP ${response.status})`)
     }
 
-    const data = await response.json()
-    
-    if (data.success && data.data) {
-      return data.data
+    if (!response.ok) {
+      // Handle validation errors
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        const errorMessages = errorData.errors.map((e: any) => e.message || e).join(", ")
+        throw new Error(errorMessages || errorData.message || "Failed to update product")
+      }
+      throw new Error(errorData.message || errorData.error || "Failed to update product")
+    }
+
+    if (errorData.success && errorData.data) {
+      return errorData.data
     }
     
     return null
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating product:", error)
-    throw error
+    // Re-throw with better error message
+    if (error.message) {
+      throw error
+    }
+    throw new Error("Failed to update product. Please check your connection and try again.")
   }
 }
 
@@ -281,6 +303,22 @@ export async function uploadProductImage(
   token: string
 ): Promise<{ url: string; public_id: string }> {
   try {
+    // Validate file
+    if (!file || !(file instanceof File)) {
+      throw new Error("File không hợp lệ")
+    }
+
+    // Check file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      throw new Error("Kích thước file vượt quá 10MB")
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      throw new Error("File phải là ảnh (JPG, PNG, GIF, WebP)")
+    }
+
     const formData = new FormData()
     formData.append("image", file)
 
@@ -294,35 +332,58 @@ export async function uploadProductImage(
     })
 
     const contentType = response.headers.get("content-type") || ""
-    const raw = await response.text().catch(() => "")
+    let raw = ""
+    
+    try {
+      raw = await response.text()
+    } catch (e) {
+      throw new Error("Không thể đọc phản hồi từ server")
+    }
 
     // Some servers return JSON with incorrect Content-Type; attempt to parse anyway.
     let data: any = null
     try {
       data = raw ? JSON.parse(raw) : null
-    } catch {
-      data = null
+    } catch (e) {
+      // If parsing fails, try to extract error message from text
+      if (raw) {
+        throw new Error(`Server error: ${raw.slice(0, 200)}`)
+      }
+      throw new Error("Phản hồi từ server không hợp lệ")
     }
 
     if (!response.ok) {
-      throw new Error(
+      const errorMessage = 
         data?.message ||
-          data?.error ||
-          (raw ? raw.slice(0, 300) : "") ||
-          `Failed to upload image (HTTP ${response.status})`
-      )
+        data?.error ||
+        (data?.errors && Array.isArray(data.errors) ? data.errors.map((e: any) => e.message || e).join(", ") : null) ||
+        `Lỗi upload ảnh (HTTP ${response.status})`
+      throw new Error(errorMessage)
     }
     
+    // Handle different response formats
     if (data.success && data.data) {
       return {
-        url: data.data.url,
-        public_id: data.data.public_id,
+        url: data.data.url || data.data.secure_url,
+        public_id: data.data.public_id || data.data.publicId || "",
       }
     }
     
-    throw new Error("Invalid response from upload endpoint")
-  } catch (error) {
+    // Fallback: check if data has url directly
+    if (data.url) {
+      return {
+        url: data.url,
+        public_id: data.public_id || data.publicId || "",
+      }
+    }
+    
+    throw new Error("Phản hồi từ server thiếu thông tin ảnh")
+  } catch (error: any) {
     console.error("Error uploading image:", error)
-    throw error
+    // Re-throw with better error message
+    if (error.message) {
+      throw error
+    }
+    throw new Error("Lỗi khi upload ảnh. Vui lòng thử lại.")
   }
 }

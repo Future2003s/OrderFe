@@ -135,20 +135,20 @@ export default function ProductsManagementPage() {
     setEditingProduct(product)
     setProductImages(product.images || [])
     setFormData({
-      name: product.name,
-      slug: product.slug,
-      price: product.price,
-      sku: product.sku,
+      name: product.name || "",
+      slug: product.slug || "",
+      price: product.price ?? 0,
+      sku: product.sku || "",
       category: typeof product.category === "string" ? product.category : product.category?._id || "",
-      shortDescription: product.shortDescription,
-      description: product.description,
-      ingredients: product.ingredients,
-      volumeMl: product.volumeMl,
-      quantity: product.quantity,
+      shortDescription: product.shortDescription || "",
+      description: product.description || "",
+      ingredients: product.ingredients || "",
+      volumeMl: product.volumeMl ?? 250,
+      quantity: product.quantity ?? 0,
       status: product.status || "active",
-      isVisible: product.isVisible,
+      isVisible: product.isVisible !== undefined ? product.isVisible : true,
       currency: product.currency || "VND",
-      trackQuantity: product.trackQuantity,
+      trackQuantity: product.trackQuantity !== undefined ? product.trackQuantity : true,
       images: product.images,
       nutrition: product.nutrition,
       supervisedBy: product.supervisedBy,
@@ -193,29 +193,39 @@ export default function ProductsManagementPage() {
     setUploadingImages(true)
 
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
-        const result = await uploadProductImage(file, authToken)
-        return {
-          url: result.url,
-          alt: file.name,
-          isMain: productImages.length === 0, // First image is main
-          order: productImages.length,
+      const uploadPromises = Array.from(files).map(async (file, fileIndex) => {
+        try {
+          const result = await uploadProductImage(file, authToken)
+          return {
+            url: result.url,
+            alt: file.name,
+            isMain: productImages.length === 0 && fileIndex === 0, // First image is main
+            order: productImages.length + fileIndex,
+          }
+        } catch (error: any) {
+          console.error(`Error uploading file ${file.name}:`, error)
+          throw new Error(`Lỗi upload ảnh ${file.name}: ${error.message || "Unknown error"}`)
         }
       })
 
       const newImages = await Promise.all(uploadPromises)
       const updatedImages = [...productImages, ...newImages]
       setProductImages(updatedImages)
-      setFormData({ ...formData, images: updatedImages })
+      setFormData((prev) => ({ ...prev, images: updatedImages }))
       toast.success(`Đã upload ${newImages.length} ảnh thành công!`)
     } catch (error: any) {
+      console.error("Error in handleImageUpload:", error)
       toast.error(error.message || "Lỗi khi upload ảnh")
     } finally {
       setUploadingImages(false)
+      // Reset input to allow uploading the same file again
+      e.target.value = ""
     }
   }
 
   const handleRemoveImage = (index: number) => {
+    if (productImages.length <= index) return
+    
     const updatedImages = productImages.filter((_, i) => i !== index)
     // Reorder images
     updatedImages.forEach((img, i) => {
@@ -224,22 +234,30 @@ export default function ProductsManagementPage() {
       else img.isMain = false
     })
     setProductImages(updatedImages)
-    setFormData({ ...formData, images: updatedImages })
+    setFormData((prev) => ({ ...prev, images: updatedImages }))
+    toast.success("Đã xóa ảnh")
   }
 
   const handleSetMainImage = (index: number) => {
+    if (productImages.length <= index) return
+    
     const updatedImages = productImages.map((img, i) => ({
       ...img,
       isMain: i === index,
     }))
     setProductImages(updatedImages)
-    setFormData({ ...formData, images: updatedImages })
+    setFormData((prev) => ({ ...prev, images: updatedImages }))
     toast.success("Đã đặt làm ảnh chính")
   }
 
   const handleReplaceImage = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (productImages.length <= index) {
+      toast.error("Không tìm thấy ảnh cần thay thế")
+      return
+    }
 
     if (!authToken) {
       toast.error("Vui lòng đăng nhập để thay ảnh")
@@ -254,21 +272,22 @@ export default function ProductsManagementPage() {
       const newImage = {
         url: result.url,
         alt: file.name,
-        isMain: productImages[index].isMain, // Keep main status
-        order: productImages[index].order, // Keep order
+        isMain: productImages[index]?.isMain || false, // Keep main status
+        order: productImages[index]?.order || index, // Keep order
       }
 
       const updatedImages = [...productImages]
       updatedImages[index] = newImage
       
       setProductImages(updatedImages)
-      setFormData({ ...formData, images: updatedImages })
+      setFormData((prev) => ({ ...prev, images: updatedImages }))
       toast.success("Đã thay ảnh thành công!")
     } catch (error: any) {
+      console.error("Error in handleReplaceImage:", error)
       toast.error(error.message || "Lỗi khi thay ảnh")
     } finally {
       setUploadingImages(false)
-      // Reset input
+      // Reset input to allow replacing with the same file again
       e.target.value = ""
     }
   }
@@ -282,41 +301,84 @@ export default function ProductsManagementPage() {
       return
     }
 
+    // Validate required fields
+    if (!formData.name || formData.name.trim().length < 2) {
+      toast.error("Tên sản phẩm phải có ít nhất 2 ký tự")
+      return
+    }
+
+    if (!formData.price || formData.price < 0) {
+      toast.error("Giá sản phẩm phải là số dương")
+      return
+    }
+
+    if (!formData.sku || formData.sku.trim().length === 0) {
+      toast.error("SKU không được để trống")
+      return
+    }
+
+    if (!formData.category || formData.category.trim().length === 0) {
+      toast.error("Category không được để trống")
+      return
+    }
+
     try {
-      const productData: CreateProductData = {
-        name: formData.name!,
-        slug: formData.slug,
+      // Build product data, only include fields that have values
+      const productData: Partial<CreateProductData> = {
+        name: formData.name!.trim(),
         price: formData.price!,
-        sku: formData.sku!,
-        category: formData.category!,
-        shortDescription: formData.shortDescription,
-        description: formData.description,
-        ingredients: formData.ingredients,
-        volumeMl: formData.volumeMl,
-        quantity: formData.quantity,
-        status: formData.status as "draft" | "active" | "archived",
-        isVisible: formData.isVisible,
-        currency: formData.currency,
-        trackQuantity: formData.trackQuantity,
-        images: productImages.length > 0 ? productImages : formData.images,
-        nutrition: formData.nutrition,
-        supervisedBy: formData.supervisedBy,
-        claims: formData.claims,
-        tags: formData.tags,
+        sku: formData.sku!.trim(),
+        category: formData.category!.trim(),
       }
+
+      // Add optional fields only if they have values
+      if (formData.slug) productData.slug = formData.slug.trim()
+      if (formData.shortDescription) productData.shortDescription = formData.shortDescription.trim()
+      if (formData.description) productData.description = formData.description.trim()
+      if (formData.ingredients) productData.ingredients = formData.ingredients.trim()
+      if (formData.volumeMl !== undefined) productData.volumeMl = formData.volumeMl
+      if (formData.quantity !== undefined) productData.quantity = formData.quantity
+      if (formData.status) productData.status = formData.status as "draft" | "active" | "archived"
+      if (formData.isVisible !== undefined) productData.isVisible = formData.isVisible
+      if (formData.currency) productData.currency = formData.currency
+      if (formData.trackQuantity !== undefined) productData.trackQuantity = formData.trackQuantity
+      
+      // Handle images - prioritize productImages state over formData.images
+      if (productImages.length > 0) {
+        productData.images = productImages
+      } else if (formData.images && Array.isArray(formData.images) && formData.images.length > 0) {
+        productData.images = formData.images
+      } else if (editingProduct && editingProduct.images && editingProduct.images.length > 0) {
+        // Keep existing images if no new images uploaded
+        productData.images = editingProduct.images
+      }
+      
+      if (formData.nutrition) productData.nutrition = formData.nutrition
+      if (formData.supervisedBy) productData.supervisedBy = formData.supervisedBy
+      if (formData.claims) productData.claims = formData.claims
+      if (formData.tags) productData.tags = formData.tags
 
       if (editingProduct) {
         await updateAdminProduct(editingProduct._id, productData, authToken)
         toast.success("Cập nhật sản phẩm thành công!")
       } else {
-        await createAdminProduct(productData, authToken)
+        await createAdminProduct(productData as CreateProductData, authToken)
         toast.success("Tạo sản phẩm thành công!")
       }
 
       setIsDialogOpen(false)
       loadProducts()
     } catch (error: any) {
-      toast.error(error.message || "Có lỗi xảy ra")
+      console.error("Error submitting product:", error)
+      const errorMessage = error.message || error.response?.data?.message || "Có lỗi xảy ra"
+      const errorDetails = error.response?.data?.errors || []
+      
+      if (errorDetails.length > 0) {
+        const errorList = errorDetails.map((e: any) => e.message || e).join(", ")
+        toast.error(`Lỗi: ${errorList}`)
+      } else {
+        toast.error(errorMessage)
+      }
     }
   }
 
@@ -461,7 +523,7 @@ export default function ProductsManagementPage() {
                 <Label htmlFor="name">Tên Sản Phẩm *</Label>
                 <Input
                   id="name"
-                  value={formData.name}
+                  value={formData.name || ""}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                 />
@@ -470,7 +532,7 @@ export default function ProductsManagementPage() {
                 <Label htmlFor="slug">Slug</Label>
                 <Input
                   id="slug"
-                  value={formData.slug}
+                  value={formData.slug || ""}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                   placeholder="nuoc-ep-vai-thieu"
                 />
@@ -483,7 +545,7 @@ export default function ProductsManagementPage() {
                 <Input
                   id="price"
                   type="number"
-                  value={formData.price}
+                  value={formData.price ?? 0}
                   onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                   required
                   min="0"
@@ -493,7 +555,7 @@ export default function ProductsManagementPage() {
                 <Label htmlFor="sku">SKU *</Label>
                 <Input
                   id="sku"
-                  value={formData.sku}
+                  value={formData.sku || ""}
                   onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                   required
                 />
@@ -504,7 +566,7 @@ export default function ProductsManagementPage() {
               <Label htmlFor="category">Category ID *</Label>
               <Input
                 id="category"
-                value={formData.category}
+                value={formData.category || ""}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 required
                 placeholder="ObjectId của category"
@@ -515,7 +577,7 @@ export default function ProductsManagementPage() {
               <Label htmlFor="shortDescription">Mô Tả Ngắn</Label>
               <Textarea
                 id="shortDescription"
-                value={formData.shortDescription}
+                value={formData.shortDescription || ""}
                 onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
                 rows={2}
               />
@@ -525,7 +587,7 @@ export default function ProductsManagementPage() {
               <Label htmlFor="description">Mô Tả Đầy Đủ</Label>
               <Textarea
                 id="description"
-                value={formData.description}
+                value={formData.description || ""}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={4}
               />
@@ -537,7 +599,7 @@ export default function ProductsManagementPage() {
                 <Input
                   id="volumeMl"
                   type="number"
-                  value={formData.volumeMl}
+                  value={formData.volumeMl ?? 250}
                   onChange={(e) => setFormData({ ...formData, volumeMl: parseInt(e.target.value) || 250 })}
                   min="0"
                 />
@@ -547,7 +609,7 @@ export default function ProductsManagementPage() {
                 <Input
                   id="quantity"
                   type="number"
-                  value={formData.quantity}
+                  value={formData.quantity ?? 0}
                   onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 0 })}
                   min="0"
                 />
@@ -558,7 +620,7 @@ export default function ProductsManagementPage() {
               <Label htmlFor="ingredients">Thành Phần</Label>
               <Textarea
                 id="ingredients"
-                value={formData.ingredients}
+                value={formData.ingredients || ""}
                 onChange={(e) => setFormData({ ...formData, ingredients: e.target.value })}
                 rows={2}
               />
@@ -609,7 +671,7 @@ export default function ProductsManagementPage() {
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {productImages.map((img, index) => (
-                      <div key={index} className="relative group">
+                      <div key={`${img.url}-${index}`} className="relative group">
                         <div className="relative aspect-square rounded-lg overflow-hidden border-2 transition-all"
                           style={{
                             borderColor: img.isMain ? "hsl(var(--primary))" : "hsl(var(--border))"
@@ -705,7 +767,7 @@ export default function ProductsManagementPage() {
               <div className="space-y-2">
                 <Label htmlFor="status">Trạng Thái</Label>
                 <Select
-                  value={formData.status}
+                  value={formData.status || "active"}
                   onValueChange={(value) => setFormData({ ...formData, status: value as any })}
                 >
                   <SelectTrigger>
@@ -721,7 +783,7 @@ export default function ProductsManagementPage() {
               <div className="space-y-2">
                 <Label htmlFor="isVisible">Hiển Thị</Label>
                 <Select
-                  value={formData.isVisible ? "true" : "false"}
+                  value={formData.isVisible !== undefined ? (formData.isVisible ? "true" : "false") : "true"}
                   onValueChange={(value) => setFormData({ ...formData, isVisible: value === "true" })}
                 >
                   <SelectTrigger>
