@@ -143,7 +143,7 @@ export default function ProductsManagementPage() {
       shortDescription: product.shortDescription || "",
       description: product.description || "",
       ingredients: product.ingredients || "",
-      volumeMl: product.volumeMl ?? 250,
+      volumeMl: product.volumeMl ?? 100,
       quantity: product.quantity ?? 0,
       status: product.status || "active",
       isVisible: product.isVisible !== undefined ? product.isVisible : true,
@@ -170,7 +170,7 @@ export default function ProductsManagementPage() {
       shortDescription: "",
       description: "",
       ingredients: "",
-      volumeMl: 250,
+      volumeMl: 100,
       quantity: 100,
       status: "active",
       isVisible: true,
@@ -599,8 +599,8 @@ export default function ProductsManagementPage() {
                 <Input
                   id="volumeMl"
                   type="number"
-                  value={formData.volumeMl ?? 250}
-                  onChange={(e) => setFormData({ ...formData, volumeMl: parseInt(e.target.value) || 250 })}
+                  value={formData.volumeMl ?? 100}
+                  onChange={(e) => setFormData({ ...formData, volumeMl: parseInt(e.target.value) || 100 })}
                   min="0"
                 />
               </div>
